@@ -1,0 +1,814 @@
+/* ── Reset & base ─────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; }
+
+html, body, #root {
+  width: 100%;
+  min-height: 100vh;
+}
+
+body {
+  margin: 0;
+  background: #0f0f13;
+  font-family: system-ui, -apple-system, sans-serif;
+  color: #e2e2e2;
+}
+
+/* Pages that need full-screen centering use .full-center or their own wrapper */
+
+/* ── Utility ──────────────────────────────────────── */
+.full-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  width: 100%;
+}
+
+/* ── Spinner ──────────────────────────────────────── */
+.spinner {
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(255,255,255,0.25);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+.spinner--lg {
+  width: 36px;
+  height: 36px;
+  border-width: 3px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Auth wrapper & card ─────────────────────────── */
+.auth-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  width: 100%;
+  padding: 24px 16px;
+}
+
+.auth-card {
+  background: #1a1a24;
+  border: 1px solid #2a2a38;
+  border-radius: 20px;
+  padding: 40px 32px;
+  width: 100%;
+  max-width: 400px;
+  box-shadow: 0 24px 64px rgba(0,0,0,0.5);
+  animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.auth-logo {
+  font-size: 40px;
+  text-align: center;
+  margin-bottom: 12px;
+}
+
+.auth-title {
+  font-size: 1.6rem;
+  font-weight: 700;
+  text-align: center;
+  margin: 0 0 6px;
+  color: #fff;
+}
+
+.auth-subtitle {
+  font-size: 0.875rem;
+  color: #888;
+  text-align: center;
+  margin: 0 0 28px;
+  word-break: break-all;
+}
+
+/* ── Error banner ────────────────────────────────── */
+.auth-error {
+  background: rgba(239,68,68,0.12);
+  border: 1px solid rgba(239,68,68,0.35);
+  border-radius: 10px;
+  color: #f87171;
+  font-size: 0.85rem;
+  padding: 10px 14px;
+  margin-bottom: 18px;
+  text-align: center;
+}
+
+/* ── Form fields ─────────────────────────────────── */
+.form-field {
+  margin-bottom: 16px;
+}
+
+.form-label {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #aaa;
+  margin-bottom: 6px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.text-input {
+  width: 100%;
+  padding: 13px 16px;
+  background: #0f0f13;
+  border: 1.5px solid #2a2a38;
+  border-radius: 12px;
+  color: #e2e2e2;
+  font-size: 1rem;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.text-input:focus {
+  border-color: #7c3aed;
+}
+.text-input::placeholder { color: #555; }
+
+/* ── Phone field ─────────────────────────────────── */
+.phone-field {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.country-code {
+  padding: 13px 10px;
+  background: #0f0f13;
+  border: 1.5px solid #2a2a38;
+  border-radius: 12px;
+  color: #e2e2e2;
+  font-size: 0.95rem;
+  outline: none;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: border-color 0.2s;
+}
+.country-code:focus { border-color: #7c3aed; }
+
+.phone-input {
+  flex: 1;
+  min-width: 0;          /* prevents flex child from overflowing on mobile */
+  padding: 13px 16px;
+  background: #0f0f13;
+  border: 1.5px solid #2a2a38;
+  border-radius: 12px;
+  color: #e2e2e2;
+  font-size: 1rem;
+  outline: none;
+  transition: border-color 0.2s;
+  letter-spacing: 0.05em;
+}
+.phone-input:focus { border-color: #7c3aed; }
+.phone-input::placeholder { color: #555; }
+
+/* ── Primary button ──────────────────────────────── */
+.auth-btn {
+  width: 100%;
+  padding: 14px;
+  background: linear-gradient(135deg, #7c3aed, #a855f7);
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: opacity 0.2s, transform 0.1s;
+  margin-bottom: 16px;
+}
+.auth-btn:hover:not(:disabled) { opacity: 0.9; }
+.auth-btn:active:not(:disabled) { transform: scale(0.98); }
+.auth-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+/* ── OTP input boxes ─────────────────────────────── */
+.otp-input-group {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin-bottom: 24px;
+}
+
+.otp-box {
+  width: 48px;
+  height: 56px;
+  text-align: center;
+  font-size: 1.4rem;
+  font-weight: 700;
+  background: #0f0f13;
+  border: 2px solid #2a2a38;
+  border-radius: 12px;
+  color: #fff;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  caret-color: transparent;
+}
+.otp-box:focus {
+  border-color: #7c3aed;
+  box-shadow: 0 0 0 3px rgba(124,58,237,0.25);
+}
+.otp-box--filled {
+  border-color: #a855f7;
+  background: #1a0f2e;
+}
+.otp-box:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* ── Resend row ──────────────────────────────────── */
+.resend-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.resend-timer {
+  font-size: 0.82rem;
+  color: #666;
+}
+
+.resend-btn {
+  background: none;
+  border: none;
+  color: #a855f7;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: underline;
+}
+.resend-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.back-btn {
+  background: none;
+  border: none;
+  color: #666;
+  font-size: 0.82rem;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: underline;
+}
+.back-btn:hover { color: #aaa; }
+
+/* ── Footer link ─────────────────────────────────── */
+.auth-footer {
+  text-align: center;
+  font-size: 0.875rem;
+  color: #666;
+  margin: 0;
+}
+.auth-link {
+  color: #a855f7;
+  font-weight: 600;
+  text-decoration: none;
+}
+.auth-link:hover { text-decoration: underline; }
+
+/* ── Home / Dashboard ────────────────────────────── */
+.home-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  width: 100%;
+  padding: 24px 16px;
+}
+
+.home-card {
+  background: #1a1a24;
+  border: 1px solid #2a2a38;
+  border-radius: 20px;
+  padding: 48px 32px;
+  width: 100%;
+  max-width: 400px;
+  text-align: center;
+  box-shadow: 0 24px 64px rgba(0,0,0,0.5);
+}
+
+.home-avatar {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #7c3aed, #a855f7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  font-weight: 700;
+  color: #fff;
+  margin: 0 auto 20px;
+}
+
+.home-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #fff;
+  margin: 0 0 6px;
+}
+
+.home-phone {
+  font-size: 0.9rem;
+  color: #888;
+  margin: 0 0 20px;
+}
+
+.home-body {
+  font-size: 0.95rem;
+  color: #aaa;
+  margin: 0 0 32px;
+  line-height: 1.6;
+}
+
+.logout-btn {
+  padding: 12px 32px;
+  background: transparent;
+  border: 1.5px solid #3a3a50;
+  border-radius: 12px;
+  color: #e2e2e2;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.2s, color 0.2s;
+}
+.logout-btn:hover {
+  border-color: #ef4444;
+  color: #f87171;
+}
+
+/* ── Home — game link ────────────────────────────── */
+.home-games {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+.home-game-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 18px 28px;
+  background: linear-gradient(135deg, #7c3aed22, #a855f722);
+  border: 1.5px solid #7c3aed55;
+  border-radius: 16px;
+  color: #e2e2e2;
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: 600;
+  transition: border-color 0.2s, background 0.2s;
+}
+.home-game-btn:hover {
+  border-color: #a855f7;
+  background: linear-gradient(135deg, #7c3aed44, #a855f744);
+}
+.home-game-icon { font-size: 2rem; }
+
+/* ── Crash Game page ─────────────────────────────── */
+.crash-page {
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;          /* desktop: fill viewport exactly */
+  width: 100%;
+  background: #0a0a12;
+  padding: 0;
+  overflow: hidden;        /* desktop: sidebar scrolls, not page */
+}
+
+.crash-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 20px;
+  border-bottom: 1px solid #1e1e2e;
+  background: #0f0f18;
+  flex-shrink: 0;
+}
+
+.crash-back-link {
+  color: #888;
+  text-decoration: none;
+  font-size: 0.85rem;
+  transition: color 0.2s;
+}
+.crash-back-link:hover { color: #e2e2e2; }
+
+.crash-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #fff;
+  margin: 0;
+  letter-spacing: 0.04em;
+}
+
+.crash-header-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.crash-conn-badge {
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 20px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+.crash-conn-badge--on  { background: #14532d; color: #4ade80; }
+.crash-conn-badge--off { background: #3b0000; color: #f87171; }
+
+.crash-logout-btn {
+  background: none;
+  border: 1px solid #2a2a3e;
+  border-radius: 8px;
+  color: #888;
+  font-size: 0.8rem;
+  padding: 5px 10px;
+  cursor: pointer;
+  transition: color 0.2s, border-color 0.2s;
+}
+.crash-logout-btn:hover { color: #e2e2e2; border-color: #555; }
+
+/* ── Round history strip ─────────────────────────── */
+.round-history {
+  display: flex;
+  gap: 6px;
+  padding: 8px 16px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  flex-shrink: 0;
+  background: #0d0d18;
+  border-bottom: 1px solid #1e1e2e;
+}
+.round-history::-webkit-scrollbar { display: none; }
+
+.crash-chip {
+  flex-shrink: 0;
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: default;
+}
+.chip--red    { background: #3b0000; color: #f87171; }
+.chip--yellow { background: #3b2a00; color: #fbbf24; }
+.chip--green  { background: #0d2b18; color: #4ade80; }
+.chip--purple { background: #2a1457; color: #c084fc; }
+
+/* ── Main layout ─────────────────────────────────── */
+.crash-layout {
+  display: flex;
+  flex: 1;
+  gap: 0;
+  min-height: 0;
+}
+
+.crash-chart-wrap {
+  flex: 1;
+  min-width: 0;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+}
+
+.crash-chart {
+  flex: 1;
+  width: 100%;
+  min-height: 280px;
+  border-radius: 12px;
+  display: block;
+}
+
+/* ── Right panel ─────────────────────────────────── */
+.crash-right-panel {
+  width: 300px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px 16px 16px 0;
+  overflow-y: auto;
+}
+
+/* ── Bet panel ───────────────────────────────────── */
+.bet-panel {
+  background: #13131e;
+  border: 1px solid #1e1e2e;
+  border-radius: 14px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.bet-balance {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.bet-balance-label { font-size: 0.75rem; color: #888; text-transform: uppercase; letter-spacing: 0.05em; }
+.bet-balance-value { font-size: 1rem; font-weight: 700; color: #a855f7; }
+
+.bet-message {
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  text-align: center;
+}
+.bet-message--success { background: rgba(34,197,94,0.12); color: #4ade80; border: 1px solid #14532d; }
+.bet-message--error   { background: rgba(239,68,68,0.12);  color: #f87171; border: 1px solid #7f1d1d; }
+
+.bet-active-indicator {
+  text-align: center;
+  font-size: 0.8rem;
+  color: #a855f7;
+  background: #2a1457;
+  border-radius: 8px;
+  padding: 6px;
+}
+
+.bet-label {
+  display: block;
+  font-size: 0.72rem;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 5px;
+}
+
+.bet-input {
+  width: 100%;
+  padding: 10px 12px;
+  background: #0a0a12;
+  border: 1.5px solid #2a2a3e;
+  border-radius: 10px;
+  color: #e2e2e2;
+  font-size: 0.95rem;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.bet-input:focus { border-color: #7c3aed; }
+.bet-input:disabled { opacity: 0.45; cursor: not-allowed; }
+.bet-input--small { width: 70px; flex-shrink: 0; }
+
+.bet-quick {
+  display: flex;
+  gap: 5px;
+}
+.bet-quick-btn {
+  flex: 1;
+  padding: 6px 4px;
+  background: #1e1e2e;
+  border: 1px solid #2a2a3e;
+  border-radius: 8px;
+  color: #aaa;
+  font-size: 0.78rem;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.bet-quick-btn:hover:not(:disabled) { background: #2a2a3e; color: #e2e2e2; }
+.bet-quick-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.bet-auto-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.bet-auto-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.78rem;
+  color: #888;
+  cursor: pointer;
+  flex: 1;
+}
+.bet-multiplier-label { font-size: 0.85rem; color: #888; }
+
+.bet-place-btn, .bet-cashout-btn {
+  width: 100%;
+  padding: 13px;
+  border: none;
+  border-radius: 11px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: opacity 0.2s, transform 0.1s;
+}
+.bet-place-btn:active, .bet-cashout-btn:active { transform: scale(0.98); }
+.bet-place-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.bet-place-btn {
+  background: linear-gradient(135deg, #16a34a, #22c55e);
+  color: #fff;
+}
+.bet-cashout-btn {
+  background: linear-gradient(135deg, #b91c1c, #ef4444);
+  color: #fff;
+  animation: pulse-red 1.5s ease-in-out infinite;
+}
+@keyframes pulse-red {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(239,68,68,0); }
+  50%       { box-shadow: 0 0 0 8px rgba(239,68,68,0.2); }
+}
+
+/* ── Active bets table ───────────────────────────── */
+.active-bets {
+  background: #13131e;
+  border: 1px solid #1e1e2e;
+  border-radius: 14px;
+  padding: 12px;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.active-bets-title {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 0 0 10px;
+}
+
+.active-bets-empty {
+  font-size: 0.82rem;
+  color: #444;
+  text-align: center;
+  margin: 16px 0;
+}
+
+.active-bets-table-wrap {
+  overflow-y: auto;
+  flex: 1;
+}
+
+.active-bets-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8rem;
+}
+.active-bets-table th {
+  color: #555;
+  text-align: left;
+  padding: 4px 6px;
+  font-weight: 500;
+  border-bottom: 1px solid #1e1e2e;
+}
+.active-bets-table td { padding: 5px 6px; }
+
+.bet-row--cashed { opacity: 0.55; }
+.bet-row-user    { color: #e2e2e2; max-width: 90px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bet-row-amount  { color: #aaa; }
+
+.bet-tag {
+  display: inline-block;
+  padding: 2px 7px;
+  border-radius: 10px;
+  font-size: 0.73rem;
+  font-weight: 600;
+}
+.bet-tag--win     { background: #0d2b18; color: #4ade80; }
+.bet-tag--loss    { background: #3b0000; color: #f87171; }
+.bet-tag--live    { background: #1a2b1a; color: #86efac; font-family: monospace; }
+.bet-tag--waiting { background: #1e1e2e; color: #555; }
+
+/* ── Provably fair bar ───────────────────────────── */
+.crash-fair-bar {
+  padding: 8px 20px;
+  font-size: 0.73rem;
+  color: #555;
+  border-top: 1px solid #1e1e2e;
+  background: #0a0a12;
+  flex-shrink: 0;
+}
+.crash-seed-hash {
+  font-family: monospace;
+  color: #7c3aed;
+  margin: 0 2px;
+}
+
+/* ── Responsive ──────────────────────────────────── */
+@media (max-width: 480px) {
+  .auth-wrapper { padding: 16px 12px; }
+  .auth-card, .home-card { padding: 28px 16px; }
+  .otp-box { width: 42px; height: 50px; font-size: 1.2rem; }
+  .otp-input-group { gap: 6px; }
+  .country-code { padding: 11px 8px; font-size: 0.85rem; }
+  .phone-input { padding: 11px 10px; font-size: 0.95rem; }
+  .phone-field { gap: 6px; }
+}
+
+/* ── Crash game — mobile stack layout ───────────────────────────────────── */
+@media (max-width: 700px) {
+  /* Allow the whole page to scroll naturally — no viewport-constrained flex */
+  .crash-page {
+    min-height: 100dvh;
+    height: auto;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .crash-header {
+    padding: 10px 14px;
+  }
+  .crash-title {
+    font-size: 0.95rem;
+  }
+  .crash-logout-btn {
+    font-size: 0.72rem;
+    padding: 4px 8px;
+  }
+
+  /* Stack chart above bet panel */
+  .crash-layout {
+    flex-direction: column;
+    flex: none;       /* stop trying to fill remaining viewport height */
+    height: auto;
+    min-height: unset;
+  }
+
+  /* Chart: explicit height so it doesn't collapse */
+  .crash-chart-wrap {
+    flex: none;
+    height: 300px;
+    min-height: 260px;
+    padding: 10px 12px 0;
+  }
+  .crash-chart {
+    min-height: 0;
+    height: 100%;
+  }
+
+  /* Right panel: full width, no internal scroll — page scrolls instead */
+  .crash-right-panel {
+    width: 100%;
+    flex-shrink: 0;
+    padding: 12px;
+    overflow-y: visible;
+    max-height: none;
+  }
+
+  /* Active bets: cap height with internal scroll on mobile */
+  .active-bets {
+    max-height: 220px;
+  }
+
+  /* Quick-amount buttons: wrap into two rows gracefully */
+  .bet-quick {
+    flex-wrap: wrap;
+  }
+  .bet-quick-btn {
+    flex: 1 1 calc(33.3% - 6px);
+    min-width: 44px;
+  }
+
+  .crash-fair-bar {
+    padding: 8px 14px;
+    word-break: break-all;
+  }
+}
+
+/* ── Extra-small screens (< 400px) ─────────────────────────────────────── */
+@media (max-width: 400px) {
+  .crash-chart-wrap {
+    height: 260px;
+    min-height: 220px;
+  }
+
+  .crash-header {
+    padding: 8px 12px;
+  }
+
+  /* Hide "Sign out" text, keep just the button icon area small */
+  .crash-logout-btn {
+    font-size: 0.68rem;
+    padding: 4px 6px;
+  }
+
+  .bet-panel {
+    padding: 12px;
+  }
+
+  .bet-place-btn, .bet-cashout-btn {
+    padding: 11px;
+    font-size: 0.88rem;
+  }
+}
