@@ -1,4 +1,5 @@
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
+// Empty string → same-origin (production via Nginx). Explicit URL → local dev.
+const BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
 
 async function request(path, body) {
   const res = await fetch(`${BASE_URL}${path}`, {

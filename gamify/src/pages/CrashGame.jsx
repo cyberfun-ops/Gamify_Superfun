@@ -7,7 +7,8 @@ import BetPanel from '../components/crash/BetPanel';
 import ActiveBets from '../components/crash/ActiveBets';
 import RoundHistory from '../components/crash/RoundHistory';
 
-const BASE_URL = import.meta.env.VITE_GAME_ENGINE_URL || 'http://localhost:4000';
+// Empty string → same-origin (production via Nginx). Explicit URL → local dev.
+const BASE_URL = import.meta.env.VITE_GAME_ENGINE_URL || '';
 
 export default function CrashGame() {
   const { user, token, logout } = useAuth();
