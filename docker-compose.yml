@@ -1,0 +1,178 @@
+version: "3.9"
+
+networks:
+  gamify_net:
+    driver: bridge
+
+services:
+
+  # ── PostgreSQL database ───────────────────────────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    container_name: postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB:       gamify_auth
+      POSTGRES_USER:     postgres
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    networks:
+      - gamify_net
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      # Runs once on first start — creates all tables
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d gamify_auth"]
+      interval: 10s
+      timeout: 5s
+      start_period: 20s
+      retries: 5
+
+  # ── API instance 1 ────────────────────────────────────────────────────────────
+  api_1:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: api_1
+    restart: unless-stopped
+    env_file:
+      - ./server/.env
+    environment:
+      # Override .env values for Docker networking
+      DB_HOST: postgres
+      DB_PORT: "5432"
+      REDIS_URL: redis://redis:6379
+      NODE_ENV: production
+    networks:
+      - gamify_net
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 5s
+      start_period: 20s
+      retries: 3
+
+  # ── API instance 2 ────────────────────────────────────────────────────────────
+  api_2:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: api_2
+    restart: unless-stopped
+    env_file:
+      - ./server/.env
+    environment:
+      DB_HOST: postgres
+      DB_PORT: "5432"
+      REDIS_URL: redis://redis:6379
+      NODE_ENV: production
+    networks:
+      - gamify_net
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 5s
+      start_period: 20s
+      retries: 3
+
+  # ── API instance 3 ────────────────────────────────────────────────────────────
+  api_3:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: api_3
+    restart: unless-stopped
+    env_file:
+      - ./server/.env
+    environment:
+      DB_HOST: postgres
+      DB_PORT: "5432"
+      REDIS_URL: redis://redis:6379
+      NODE_ENV: production
+    networks:
+      - gamify_net
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 5s
+      start_period: 20s
+      retries: 3
+
+  # ── Redis ─────────────────────────────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    restart: unless-stopped
+    networks:
+      - gamify_net
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  # ── Game Engine (crash game + WebSocket) ──────────────────────────────────────
+  game_engine:
+    build:
+      context: ./game-engine
+      dockerfile: Dockerfile
+    container_name: game_engine
+    restart: unless-stopped
+    env_file:
+      - ./game-engine/.env
+    environment:
+      DB_HOST:   postgres
+      DB_PORT:   "5432"
+      REDIS_URL: redis://redis:6379
+      NODE_ENV:  production
+    networks:
+      - gamify_net
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:4000/health"]
+      interval: 30s
+      timeout: 5s
+      start_period: 20s
+      retries: 3
+
+  # ── Nginx + React frontend ─────────────────────────────────────────────────────
+  # Multi-stage build: node builds React app, nginx serves static files + proxies APIs
+  nginx:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    container_name: nginx_gateway
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    networks:
+      - gamify_net
+    depends_on:
+      api_1:
+        condition: service_healthy
+      api_2:
+        condition: service_healthy
+      api_3:
+        condition: service_healthy
+      game_engine:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
+  redis_data:
