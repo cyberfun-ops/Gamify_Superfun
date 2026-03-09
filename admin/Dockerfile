@@ -3,7 +3,7 @@ FROM node:20-alpine AS ui-builder
 WORKDIR /build
 
 COPY admin/client/package*.json ./
-RUN npm ci
+RUN npm install --legacy-peer-deps
 
 COPY admin/client/ .
 RUN npm run build
@@ -13,7 +13,7 @@ FROM node:20-alpine
 WORKDIR /app
 
 COPY admin/server/package*.json ./
-RUN npm ci --omit=dev
+RUN npm install --omit=dev --legacy-peer-deps
 
 COPY admin/server/ ./server/
 COPY --from=ui-builder /build/dist ./public/
