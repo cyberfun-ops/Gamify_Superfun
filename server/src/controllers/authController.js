@@ -154,21 +154,41 @@ async function verifyOtp(req, res) {
     // ── Invalidate the OTP (single-use) ──
     await query(`UPDATE otps SET used = true WHERE id = $1`, [record.id]);
 
-    // ── Upsert user ──
-    // If sign-up (name provided) → create or update name
-    // If sign-in (no name) → just mark verified
     const trimmedName = name && typeof name === 'string' ? name.trim() : null;
+    const isSignUp = !!trimmedName;
 
-    const { rows: userRows } = await query(
-      `INSERT INTO users (phone, name, is_verified)
-       VALUES ($1, $2, true)
-       ON CONFLICT (phone) DO UPDATE
-         SET is_verified = true,
-             name        = COALESCE(NULLIF(EXCLUDED.name, ''), users.name),
-             updated_at  = NOW()
-       RETURNING id, name, phone, is_verified, created_at`,
-      [normalized, trimmedName]
+    // ── Check user existence ──
+    const { rows: existing } = await query(
+      `SELECT id FROM users WHERE phone = $1`,
+      [normalized]
     );
+
+    if (!isSignUp && existing.length === 0) {
+      return fail(res, 404, 'No account found for this number. Please sign up first.');
+    }
+
+    let userRows;
+    if (isSignUp) {
+      const result = await query(
+        `INSERT INTO users (phone, name, is_verified)
+         VALUES ($1, $2, true)
+         ON CONFLICT (phone) DO UPDATE
+           SET is_verified = true,
+               name        = COALESCE(NULLIF(EXCLUDED.name, ''), users.name),
+               updated_at  = NOW()
+         RETURNING id, name, phone, is_verified, created_at`,
+        [normalized, trimmedName]
+      );
+      userRows = result.rows;
+    } else {
+      const result = await query(
+        `UPDATE users SET is_verified = true, updated_at = NOW()
+         WHERE phone = $1
+         RETURNING id, name, phone, is_verified, created_at`,
+        [normalized]
+      );
+      userRows = result.rows;
+    }
 
     const user = userRows[0];
 

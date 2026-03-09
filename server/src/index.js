@@ -26,6 +26,13 @@ if (missing.length) {
 const app  = express();
 const PORT = Number(process.env.PORT) || 3000;
 
+// Allow one or more comma-separated origins via CLIENT_ORIGIN.
+// In production without CLIENT_ORIGIN set: deny all cross-origin (safe default — Nginx serves same origin).
+// In development without CLIENT_ORIGIN set: reflect any origin for convenience.
+const corsOrigin = process.env.CLIENT_ORIGIN
+  ? process.env.CLIENT_ORIGIN.split(',').map((o) => o.trim())
+  : process.env.NODE_ENV === 'production' ? false : true;
+
 // Trust the first proxy hop (Nginx).
 // Without this, express-rate-limit sees Nginx's internal Docker IP
 // for every client — all traffic shares one rate-limit bucket.
@@ -36,9 +43,10 @@ app.set('trust proxy', 1);
 // ── Security & parsing ────────────────────────────────────────
 app.use(helmet());
 app.use(cors({
-  origin: true,                                       // reflect any Origin header — allows all origins
+  origin: corsOrigin,
   methods: ['GET', 'POST'],
   allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true,
 }));
 app.use(express.json({ limit: '16kb' }));
 app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
