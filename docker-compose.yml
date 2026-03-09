@@ -13,6 +13,8 @@ services:
       POSTGRES_DB:       gamify_auth
       POSTGRES_USER:     postgres
       POSTGRES_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "5432:5432"
     networks:
       - gamify_net
     volumes:
@@ -149,6 +151,56 @@ services:
       start_period: 20s
       retries: 3
 
+  # ── Transaction server (deposit UTR + SMS webhook) ───────────────────────────
+  transaction_server:
+    build:
+      context: ./transaction-server
+      dockerfile: Dockerfile
+    container_name: transaction_server
+    restart: unless-stopped
+    env_file:
+      - ./transaction-server/.env
+    environment:
+      DB_HOST: postgres
+      DB_PORT: "5432"
+      NODE_ENV: production
+    networks:
+      - gamify_net
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:5001/health"]
+      interval: 30s
+      timeout: 5s
+      start_period: 20s
+      retries: 3
+
+  # ── Admin dashboard (port 5000, exposed via Nginx :8080) ─────────────────────
+  admin_service:
+    build:
+      context: .
+      dockerfile: admin/Dockerfile
+    container_name: admin_service
+    restart: unless-stopped
+    env_file:
+      - ./admin/.env
+    environment:
+      DB_HOST: postgres
+      DB_PORT: "5432"
+      NODE_ENV: production
+    networks:
+      - gamify_net
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 5s
+      start_period: 20s
+      retries: 3
+
   # ── Nginx + React frontend ─────────────────────────────────────────────────────
   # Multi-stage build: node builds React app, nginx serves static files + proxies APIs
   nginx:
@@ -159,6 +211,7 @@ services:
     restart: unless-stopped
     ports:
       - "80:80"
+      - "8080:8080"
     networks:
       - gamify_net
     depends_on:
@@ -169,6 +222,10 @@ services:
       api_3:
         condition: service_healthy
       game_engine:
+        condition: service_healthy
+      admin_service:
+        condition: service_healthy
+      transaction_server:
         condition: service_healthy
 
 volumes:

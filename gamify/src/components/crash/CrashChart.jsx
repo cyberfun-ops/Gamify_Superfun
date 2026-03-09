@@ -1,9 +1,14 @@
 import { useEffect, useRef } from 'react';
+import airplaneSrc from '../../assets/images/airplane.png';
 
 const GROWTH_RATE = 0.07;
 const PAD = { top: 24, right: 28, bottom: 44, left: 56 };
 const STARS = 100;
 const TRAIL = 40;
+
+// Airplane render size — tweak these if the plane looks too big/small
+const PLANE_W = 72;
+const PLANE_H = 48;
 
 /* ── Starfield ──────────────────────────────────────────────────────────── */
 function makeStars(W, H) {
@@ -17,96 +22,15 @@ function makeStars(W, H) {
   }));
 }
 
-/* ── Kite (nose → right at angle 0) ────────────────────────────────────── */
-// cx,cy = spar intersection (where diagonal and spine cross)
-const KX = { nose: 30, back: -21, cx: 5 };
-const KY = { top: -23, bot: 23 };
-const KITE_COLORS = ['#ef4444', '#3b82f6', '#22c55e', '#fbbf24'];
-
-function kite(ctx, x, y, angle, alpha = 1, phase = 0, cutString = false) {
+/* ── Airplane (image-based) ─────────────────────────────────────────────── */
+// x, y  = centre position; angle = rotation in radians (0 = facing right)
+function drawPlane(ctx, x, y, angle, alpha, img) {
+  if (!img || !img.complete || !img.naturalWidth) return;
   ctx.save();
   ctx.globalAlpha = alpha;
   ctx.translate(x, y);
   ctx.rotate(angle);
-
-  // ── 4 colored panels (triangles from spar intersection) ──
-  const panels = [
-    [[KX.cx,0],[KX.nose,0],[KX.cx,KY.top]],
-    [[KX.cx,0],[KX.cx,KY.top],[KX.back,0]],
-    [[KX.cx,0],[KX.back,0],[KX.cx,KY.bot]],
-    [[KX.cx,0],[KX.cx,KY.bot],[KX.nose,0]],
-  ];
-  panels.forEach(([a,b,c], i) => {
-    ctx.beginPath();
-    ctx.moveTo(a[0],a[1]); ctx.lineTo(b[0],b[1]); ctx.lineTo(c[0],c[1]);
-    ctx.closePath();
-    ctx.fillStyle = KITE_COLORS[i];
-    ctx.fill();
-  });
-
-  // outline
-  ctx.beginPath();
-  ctx.moveTo(KX.nose,0); ctx.lineTo(KX.cx,KY.top);
-  ctx.lineTo(KX.back,0); ctx.lineTo(KX.cx,KY.bot);
-  ctx.closePath();
-  ctx.strokeStyle = 'rgba(255,255,255,0.35)';
-  ctx.lineWidth   = 0.9;
-  ctx.stroke();
-
-  // cross spars
-  ctx.strokeStyle = 'rgba(255,255,255,0.5)';
-  ctx.lineWidth   = 0.7;
-  ctx.beginPath(); ctx.moveTo(KX.back,0); ctx.lineTo(KX.nose,0); ctx.stroke();
-  ctx.beginPath(); ctx.moveTo(KX.cx,KY.top); ctx.lineTo(KX.cx,KY.bot); ctx.stroke();
-
-  // ── wavy tail ──
-  const TAIL = 56;
-  const SEGMENTS = 16;
-  ctx.strokeStyle = 'rgba(255,215,60,0.85)';
-  ctx.lineWidth   = 1.6;
-  ctx.lineJoin    = 'round';
-  ctx.beginPath();
-  for (let i = 0; i <= SEGMENTS; i++) {
-    const t  = i / SEGMENTS;
-    const tx = KX.back - t * TAIL;
-    const ty = Math.sin(phase + t * Math.PI * 2.8) * 5.5 * t;
-    i === 0 ? ctx.moveTo(tx, ty) : ctx.lineTo(tx, ty);
-  }
-  ctx.stroke();
-
-  // bow decorations
-  for (const tp of [0.28, 0.56, 0.84]) {
-    const tx = KX.back - tp * TAIL;
-    const ty = Math.sin(phase + tp * Math.PI * 2.8) * 5.5 * tp;
-    const bc = tp < 0.4 ? '#f59e0b' : tp < 0.7 ? '#ec4899' : '#a78bfa';
-    ctx.save();
-    ctx.translate(tx, ty);
-    ctx.rotate(Math.cos(phase + tp * Math.PI * 2.8) * 0.45);
-    ctx.fillStyle = bc;
-    ctx.beginPath(); ctx.ellipse(-4, 0, 5.5, 3.0, 0, 0, Math.PI * 2); ctx.fill();
-    ctx.beginPath(); ctx.ellipse( 4, 0, 5.5, 3.0, 0, 0, Math.PI * 2); ctx.fill();
-    ctx.fillStyle = '#fff';
-    ctx.beginPath(); ctx.arc(0, 0, 2.0, 0, Math.PI * 2); ctx.fill();
-    ctx.restore();
-  }
-
-  // dangling cut string end (only after crash)
-  if (cutString) {
-    const csLen = 32;
-    ctx.strokeStyle = 'rgba(255,255,255,0.45)';
-    ctx.lineWidth   = 0.9;
-    ctx.setLineDash([3, 4]);
-    ctx.beginPath();
-    for (let i = 0; i <= 8; i++) {
-      const t  = i / 8;
-      const tx = KX.cx + t * csLen;
-      const ty = KY.bot + Math.sin(phase * 2 + t * Math.PI) * 4 * t;
-      i === 0 ? ctx.moveTo(tx, ty) : ctx.lineTo(tx, ty);
-    }
-    ctx.stroke();
-    ctx.setLineDash([]);
-  }
-
+  ctx.drawImage(img, -PLANE_W / 2, -PLANE_H / 2, PLANE_W, PLANE_H);
   ctx.restore();
 }
 
@@ -114,6 +38,7 @@ function kite(ctx, x, y, angle, alpha = 1, phase = 0, cutString = false) {
 export default function CrashChart({ status, multiplier, elapsed, crashPoint, timeRemaining }) {
   const canvasRef  = useRef(null);
   const animRef    = useRef(null);
+  const planeImg   = useRef(null);
 
   // live refs — read by rAF loop without re-registration
   const R = useRef({ status, multiplier, elapsed, crashPoint, timeRemaining });
@@ -126,9 +51,16 @@ export default function CrashChart({ status, multiplier, elapsed, crashPoint, ti
   const trail       = useRef([]);
   const crashAnim   = useRef(null);
   const prevStatus  = useRef(null);
-  const bettingRef  = useRef(null); // { startTs, initialRemain } — set when betting begins
-  const smoothAng   = useRef(0);    // exponentially smoothed kite angle
-  const lastMultRef = useRef({ mult: NaN, elSec: 0, ts: 0 }); // client-side tick interpolation
+  const bettingRef  = useRef(null);
+  const smoothAng   = useRef(0);
+  const lastMultRef = useRef({ mult: NaN, elSec: 0, ts: 0 });
+
+  /* ── Preload airplane image ──────────────────────────────────────────── */
+  useEffect(() => {
+    const img = new Image();
+    img.src = airplaneSrc;
+    planeImg.current = img;
+  }, []);
 
   /* ── animation loop — set up ONCE ──────────────────────────────────────── */
   useEffect(() => {
@@ -213,18 +145,19 @@ export default function CrashChart({ status, multiplier, elapsed, crashPoint, ti
         ctx.stroke();
         ctx.setLineDash([]);
 
-        const px = PAD.left + 44, py = baseY - 20;
+        const px = PAD.left + 44, py = baseY - PLANE_H / 2 - 8;
 
+        // engine glow under plane
         const gg = ctx.createRadialGradient(px, baseY, 0, px, baseY, 40);
         gg.addColorStop(0, 'rgba(255,140,30,0.28)');
         gg.addColorStop(1, 'rgba(255,140,30,0)');
         ctx.beginPath(); ctx.ellipse(px, baseY, 40, 12, 0, 0, Math.PI * 2);
         ctx.fillStyle = gg; ctx.fill();
 
-        kite(ctx, px, py, 0, 1, now * 1.5);
+        drawPlane(ctx, px, py, 0, 1, planeImg.current);
 
         if (status === 'starting') {
-          /* wind swirl particles lifting the kite */
+          /* engine exhaust particles on takeoff */
           for (let p = 0; p < 8; p++) {
             const age = ((now * 1.8 + p * 0.35) % 1);
             const wx  = px - 10 + Math.cos(p * 1.1 + now * 2) * 28 * age;
@@ -239,36 +172,31 @@ export default function CrashChart({ status, multiplier, elapsed, crashPoint, ti
         ctx.textAlign = 'center';
         if (status === 'betting') {
           const total   = 10000;
-          // Compute live countdown from when the betting phase started
           const bet     = bettingRef.current;
           const elapsed_ms = bet ? performance.now() - bet.startTs : 0;
           const remain  = Math.max(0, (bet?.initialRemain ?? total) - elapsed_ms);
           const secs    = Math.ceil(remain / 1000);
-          const pct     = remain / total; // 1 → 0 as time runs out
+          const pct     = remain / total;
 
-          // Label above bar
           ctx.font      = 'bold 16px system-ui, sans-serif';
           ctx.fillStyle = 'rgba(255,255,255,0.75)';
           ctx.fillText('Place your bet before takeoff!', W / 2, H / 2 - 32);
 
-          // Progress bar dimensions
           const barW  = Math.min(iW * 0.65, 320);
           const barH  = 18;
           const barX  = W / 2 - barW / 2;
           const barY  = H / 2 - 9;
           const r     = barH / 2;
 
-          // Track (background)
           ctx.fillStyle = 'rgba(255,255,255,0.08)';
           ctx.beginPath();
           ctx.roundRect(barX, barY, barW, barH, r);
           ctx.fill();
 
-          // Fill — color shifts green → amber → red as time runs out
           const hue   = pct > 0.5 ? 120 : pct > 0.25 ? 40 : 0;
           const sat   = pct > 0.5 ? 70  : pct > 0.25 ? 85 : 90;
           const lum   = 50;
-          const fillW = Math.max(r * 2, barW * pct); // keep min width for round ends
+          const fillW = Math.max(r * 2, barW * pct);
           const barGrad = ctx.createLinearGradient(barX, 0, barX + barW, 0);
           barGrad.addColorStop(0,   `hsla(${hue},${sat}%,${lum+12}%,0.95)`);
           barGrad.addColorStop(1,   `hsla(${hue},${sat}%,${lum}%,0.85)`);
@@ -277,7 +205,6 @@ export default function CrashChart({ status, multiplier, elapsed, crashPoint, ti
           ctx.roundRect(barX, barY, fillW, barH, r);
           ctx.fill();
 
-          // Shimmer sweep
           const shim = ctx.createLinearGradient(barX, 0, barX + fillW, 0);
           const sp   = (performance.now() / 900) % 1;
           shim.addColorStop(Math.max(0, sp - 0.15), 'rgba(255,255,255,0)');
@@ -288,7 +215,6 @@ export default function CrashChart({ status, multiplier, elapsed, crashPoint, ti
           ctx.roundRect(barX, barY, fillW, barH, r);
           ctx.fill();
 
-          // Countdown number centred in bar
           ctx.textAlign  = 'center';
           ctx.font       = `bold 12px system-ui, sans-serif`;
           ctx.fillStyle  = 'rgba(255,255,255,0.9)';
@@ -309,17 +235,12 @@ export default function CrashChart({ status, multiplier, elapsed, crashPoint, ti
       /* ── RUNNING / CRASHED ───────────────────────────────────── */
       const isCrashed = status === 'crashed';
 
-      // Smooth 60fps interpolation between 50ms server ticks.
-      // For running: detect each server tick (multiplier change), then extrapolate
-      // forward using the known exponential formula so the kite glides continuously.
-      // For crashed: use the fixed crashPoint — no interpolation needed.
       let elSec, curMult;
       if (isCrashed) {
         curMult = crashPoint ?? multiplier;
         elSec   = Math.log(Math.max(curMult, 1.0001)) / GROWTH_RATE;
       } else {
         const serverMult = multiplier ?? 1;
-        // New server tick arrived — anchor the interpolation to this point
         if (serverMult !== lastMultRef.current.mult) {
           lastMultRef.current = {
             mult:  serverMult,
@@ -327,7 +248,6 @@ export default function CrashChart({ status, multiplier, elapsed, crashPoint, ti
             ts:    performance.now(),
           };
         }
-        // Extrapolate forward from the last anchor; cap at 120ms to prevent runaway on lag
         const timeSince = (performance.now() - lastMultRef.current.ts) / 1000;
         elSec   = lastMultRef.current.elSec + Math.min(timeSince, 0.12);
         curMult = Math.pow(Math.E, GROWTH_RATE * elSec);
@@ -335,28 +255,24 @@ export default function CrashChart({ status, multiplier, elapsed, crashPoint, ti
 
       if (elSec <= 0) return;
 
-      // Fixed time window — curve grows left→right, expands only when game runs long
-      const MIN_WIN  = 10; // seconds always visible on x-axis
+      const MIN_WIN  = 10;
       const visTime  = Math.max(MIN_WIN, elSec * 1.15);
 
       const maxM  = Math.max(curMult * 1.25, 2);
       const steps = Math.max(80, Math.floor(elSec * 25));
 
-      // Linear Y scale → exponential curve looks curved (not a straight line)
       const toY = (m) => PAD.top + iH - ((m - 1) / (maxM - 1)) * iH;
-      // Fixed-window X scale → curve tip starts left and grows rightward
       const toX = (t) => PAD.left + (t / visTime) * iW;
 
       const tipX = toX(elSec);
       const tipY = toY(curMult);
 
-      const dt     = Math.max(0.3, elSec * 0.04); // wide window keeps angle stable at takeoff
+      const dt     = Math.max(0.3, elSec * 0.04);
       const t0     = Math.max(0, elSec - dt);
       const rawAng = Math.atan2(
         toY(Math.pow(Math.E, GROWTH_RATE * elSec)) - toY(Math.pow(Math.E, GROWTH_RATE * t0)),
         toX(elSec) - toX(t0)
       );
-      // Blend toward raw angle each frame (lower = smoother, higher = more responsive)
       smoothAng.current += 0.12 * (rawAng - smoothAng.current);
       const ang = smoothAng.current;
 
@@ -444,21 +360,7 @@ export default function CrashChart({ status, multiplier, elapsed, crashPoint, ti
         ctx.beginPath(); ctx.arc(tipX, tipY, 38, 0, Math.PI * 2);
         ctx.fillStyle = halo; ctx.fill();
 
-        /* kite string from origin to kite tip */
-        ctx.save();
-        ctx.strokeStyle = 'rgba(255,255,255,0.13)';
-        ctx.lineWidth   = 0.9;
-        ctx.setLineDash([4, 7]);
-        ctx.beginPath();
-        ctx.moveTo(PAD.left, PAD.top + iH);
-        const midSX = (PAD.left + tipX) / 2;
-        const midSY = (PAD.top + iH + tipY) / 2 + 18;
-        ctx.quadraticCurveTo(midSX, midSY, tipX, tipY);
-        ctx.stroke();
-        ctx.setLineDash([]);
-        ctx.restore();
-
-        kite(ctx, tipX, tipY, ang, 1, now * 2.2);
+        drawPlane(ctx, tipX, tipY, ang, 1, planeImg.current);
 
         /* multiplier */
         ctx.textAlign   = 'center';
@@ -503,7 +405,7 @@ export default function CrashChart({ status, multiplier, elapsed, crashPoint, ti
           ctx.fill();
         }
 
-        /* string-snap sparks at crash point */
+        /* string-snap sparks */
         for (let s = 0; s < 8; s++) {
           const snapAge = Math.min(age / 0.4, 1);
           const sa = (s / 8) * Math.PI * 2;
@@ -518,15 +420,16 @@ export default function CrashChart({ status, multiplier, elapsed, crashPoint, ti
           ctx.fill();
         }
 
-        /* kite floats upward freely (string cut) */
+        /* plane tumbles away after crash */
         const fa = Math.max(0, 1 - age * 0.65);
         if (fa > 0) {
-          kite(
+          drawPlane(
             ctx,
             cr.x + age * 18,
             cr.y - age * 75,
             cr.angle - age * 6,
-            fa, now * 3.5, true   // cutString=true → dangling string end
+            fa,
+            planeImg.current
           );
         }
 

@@ -24,10 +24,14 @@ function hashSeed(seed) {
   return crypto.createHash('sha256').update(seed).digest('hex');
 }
 
+// Maximum multiplier the game will ever reach — rounds that would go higher
+// are capped here. Verification still works because both sides apply this cap.
+const MAX_CRASH_POINT = 100;
+
 /**
  * Calculate the crash point for a round.
  * Uses HMAC-SHA256 with house edge of 1%.
- * Returns a number >= 1.00 (e.g. 1.23 = crashed at 1.23x).
+ * Returns a number in [1.00, MAX_CRASH_POINT].
  */
 function calculateCrashPoint(serverSeed, clientSeed, nonce) {
   const hash = crypto
@@ -41,10 +45,10 @@ function calculateCrashPoint(serverSeed, clientSeed, nonce) {
   const e = Math.pow(2, 52);
 
   // Formula from the design doc — result ranges from 1.00 to theoretically infinite
-  const crashPoint =
+  const raw =
     Math.max(1.0, Math.floor(((100 * e - h) / (e - h)) / 100 * (1 - houseEdge) * 100) / 100);
 
-  return crashPoint;
+  return Math.min(raw, MAX_CRASH_POINT);
 }
 
 /**

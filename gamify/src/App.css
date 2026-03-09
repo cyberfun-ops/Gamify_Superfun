@@ -427,6 +427,19 @@ body {
 .crash-conn-badge--on  { background: #14532d; color: #4ade80; }
 .crash-conn-badge--off { background: #3b0000; color: #f87171; }
 
+.crash-deposit-btn {
+  background: #7c3aed;
+  border: none;
+  border-radius: 8px;
+  color: #fff;
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 5px 12px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.crash-deposit-btn:hover { background: #6d28d9; }
+
 .crash-logout-btn {
   background: none;
   border: 1px solid #2a2a3e;
@@ -438,6 +451,179 @@ body {
   transition: color 0.2s, border-color 0.2s;
 }
 .crash-logout-btn:hover { color: #e2e2e2; border-color: #555; }
+
+/* ── Deposit modal ───────────────────────────────── */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.deposit-modal {
+  background: #13131e;
+  border: 1px solid #2a2a3e;
+  border-radius: 14px;
+  padding: 24px 28px;
+  width: 300px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.deposit-modal-header {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.deposit-modal-title {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #fff;
+}
+
+.deposit-modal-close {
+  background: none;
+  border: none;
+  color: #888;
+  font-size: 1.1rem;
+  cursor: pointer;
+  line-height: 1;
+  padding: 2px 6px;
+  border-radius: 6px;
+  transition: color 0.2s;
+}
+.deposit-modal-close:hover { color: #fff; }
+
+.deposit-amount-input {
+  width: 100%;
+  background: #0f0f18;
+  border: 1px solid #2a2a3e;
+  border-radius: 8px;
+  color: #e2e2e2;
+  font-size: 0.95rem;
+  padding: 8px 12px;
+  box-sizing: border-box;
+  outline: none;
+}
+.deposit-amount-input:focus { border-color: #7c3aed; }
+.deposit-amount-input::placeholder { color: #555; }
+
+.deposit-qr-wrap {
+  background: #13131e;
+  border-radius: 10px;
+  padding: 10px;
+  line-height: 0;
+}
+
+.deposit-upi-row {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+.deposit-upi-label {
+  font-size: 0.72rem;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.deposit-upi-value {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #a78bfa;
+  letter-spacing: 0.02em;
+}
+
+.deposit-hint {
+  margin: 0;
+  font-size: 0.75rem;
+  color: #555;
+  text-align: center;
+}
+
+.deposit-amount-label {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #a78bfa;
+  align-self: flex-start;
+}
+.deposit-amount-label strong { color: #fff; }
+
+.deposit-next-btn {
+  width: 100%;
+  background: #7c3aed;
+  border: none;
+  border-radius: 8px;
+  color: #fff;
+  font-size: 0.9rem;
+  font-weight: 600;
+  padding: 10px;
+  cursor: pointer;
+  transition: background 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+.deposit-next-btn:hover:not(:disabled) { background: #6d28d9; }
+.deposit-next-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.deposit-btn-row {
+  width: 100%;
+  display: flex;
+  gap: 8px;
+}
+.deposit-btn-row .deposit-next-btn { flex: 1; }
+
+.deposit-back-btn {
+  background: none;
+  border: 1px solid #2a2a3e;
+  border-radius: 8px;
+  color: #888;
+  font-size: 0.85rem;
+  padding: 10px 14px;
+  cursor: pointer;
+  transition: color 0.2s, border-color 0.2s;
+  white-space: nowrap;
+}
+.deposit-back-btn:hover:not(:disabled) { color: #e2e2e2; border-color: #555; }
+.deposit-back-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.deposit-error {
+  margin: 0;
+  font-size: 0.8rem;
+  color: #f87171;
+  text-align: center;
+  width: 100%;
+}
+
+.deposit-done-icon {
+  font-size: 2.5rem;
+  color: #4ade80;
+  background: #14532d;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.deposit-done-text {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #a0a0b8;
+  text-align: center;
+  line-height: 1.5;
+}
 
 /* ── Round history strip ─────────────────────────── */
 .round-history {
@@ -811,4 +997,11 @@ body {
     padding: 11px;
     font-size: 0.88rem;
   }
+}
+#logo-clr{
+  color: green;
+  font-size: 2.5rem;
+  font-weight: 700;
+  text-align: center;
+  margin: 0 0 6px;
 }

@@ -14,7 +14,7 @@ export default function RoundHistory({ rounds = [] }) {
 
   return (
     <div className="round-history">
-      {rounds.slice(0, 15).map((r) => {
+      {rounds.slice(0, 30).map((r) => {
         const cp = parseFloat(r.crash_point);
         return (
           <span key={r.id} className={`crash-chip ${chipColor(cp)}`} title={`Round #${r.id}`}>

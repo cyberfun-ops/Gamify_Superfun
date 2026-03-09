@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react';
+import cashoutSfx from '../../assets/sounds/Cashout.mp3';
+import { loadSound, playSound } from '../../utils/sound';
 
 const QUICK_AMOUNTS = [10, 50, 100, 500];
 
@@ -8,6 +10,8 @@ export default function BetPanel({ status, balance, bets, userId, placeBet, cash
   const [autoCashout, setAutoCashout] = useState('2.00');
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState(null); // { type: 'success'|'error', text }
+
+  useEffect(() => { loadSound('cashout', cashoutSfx); }, []);
 
   const myBet = bets?.find((b) => b.userId === userId);
   const hasActiveBet = myBet && !myBet.cashedOut;
@@ -24,6 +28,7 @@ export default function BetPanel({ status, balance, bets, userId, placeBet, cash
   async function handlePlaceBet() {
     const amt = parseFloat(amount);
     if (!amt || amt <= 0) return setMessage({ type: 'error', text: 'Enter a valid amount.' });
+    if (amt < 10) return setMessage({ type: 'error', text: 'Minimum bet is ₹10.' });
     if (balance !== null && amt > balance) {
       return setMessage({ type: 'error', text: 'Insufficient balance.' });
     }
@@ -44,6 +49,7 @@ export default function BetPanel({ status, balance, bets, userId, placeBet, cash
     setLoading(true);
     try {
       const result = await cashout();
+      playSound('cashout');
       setMessage({
         type: 'success',
         text: `Cashed out @ ${result.cashoutMultiplier}x! +${result.payout.toFixed(2)}`,
@@ -90,8 +96,8 @@ export default function BetPanel({ status, balance, bets, userId, placeBet, cash
         <input
           type="number"
           className="bet-input"
-          placeholder="0"
-          min="1"
+          placeholder="Min ₹10"
+          min="10"
           step="1"
           value={amount}
           onChange={(e) => setAmount(e.target.value)}

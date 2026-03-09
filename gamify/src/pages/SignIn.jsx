@@ -91,7 +91,7 @@ export default function SignIn() {
     <div className="auth-wrapper">
       <div className="auth-card">
         <div className="auth-logo">🎮</div>
-        <h1 className="auth-title">Gamify</h1>
+        <h1 className="auth-title">Ga<span id="logo-clr">mify</span></h1>
         <p className="auth-subtitle">
           {step === 'phone'
             ? 'Enter your mobile number to continue'

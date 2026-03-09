@@ -84,3 +84,34 @@ CREATE TABLE IF NOT EXISTS transactions (
 );
 
 CREATE INDEX IF NOT EXISTS idx_tx_user ON transactions(user_id, created_at DESC);
+
+-- ── DEPOSIT REQUESTS ──────────────────────────────────────────────────────────
+-- Stores user UTR submissions waiting for bank SMS confirmation.
+-- status: pending → approved | rejected
+
+CREATE TABLE IF NOT EXISTS deposit_requests (
+  id          UUID          PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id     UUID          NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  amount      DECIMAL(18,8) NOT NULL CHECK (amount > 0),
+  utr         VARCHAR(50)   NOT NULL,
+  status      VARCHAR(20)   NOT NULL DEFAULT 'pending',
+  created_at  TIMESTAMPTZ   NOT NULL DEFAULT NOW(),
+  matched_at  TIMESTAMPTZ,
+  CONSTRAINT deposit_requests_utr_key UNIQUE (utr)
+);
+
+CREATE INDEX IF NOT EXISTS idx_deposit_user   ON deposit_requests(user_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_deposit_status ON deposit_requests(status);
+CREATE INDEX IF NOT EXISTS idx_deposit_utr    ON deposit_requests(utr);
+
+-- ── ADMIN SCHEMA ──────────────────────────────────────────────────────────────
+
+CREATE TABLE IF NOT EXISTS admin_users (
+  id            UUID         PRIMARY KEY DEFAULT gen_random_uuid(),
+  username      VARCHAR(50)  UNIQUE NOT NULL,
+  password_hash VARCHAR(255) NOT NULL,
+  created_at    TIMESTAMPTZ  NOT NULL DEFAULT NOW()
+);
+
+-- Default admin account: username=admin, password=admin123 (change after first login)
+

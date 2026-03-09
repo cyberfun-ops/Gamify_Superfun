@@ -6,6 +6,11 @@ import CrashChart from '../components/crash/CrashChart';
 import BetPanel from '../components/crash/BetPanel';
 import ActiveBets from '../components/crash/ActiveBets';
 import RoundHistory from '../components/crash/RoundHistory';
+import DepositModal from '../components/crash/DepositModal';
+import { loadSound, playSound, loopSound, stopSound, unlockAudio } from '../utils/sound';
+import startSfx from '../assets/sounds/Start.mp3';
+import crashSfx from '../assets/sounds/crash.mp3';
+import flySfx from '../assets/sounds/fly.mp3';
 
 // Empty string → same-origin (production via Nginx). Explicit URL → local dev.
 const BASE_URL = import.meta.env.VITE_GAME_ENGINE_URL || '';
@@ -16,9 +21,24 @@ export default function CrashGame() {
     gameState, multiplier, elapsed, bets,
     balance, setBalance, connected, error,
     placeBet, cashout,
-  } = useGameSocket();
+  } = useGameSocket({
+    onStart: () => { playSound('start'); loopSound('fly'); },
+    onCrash: () => { playSound('crash'); stopSound('fly'); },
+  });
 
   const [history, setHistory] = useState([]);
+  const [depositOpen, setDepositOpen] = useState(false);
+
+  // Decode audio files into Web Audio buffers once on mount
+  useEffect(() => {
+    loadSound('start', startSfx);
+    loadSound('crash', crashSfx);
+    loadSound('fly', flySfx);
+
+    // Unlock AudioContext on first user interaction
+    window.addEventListener('pointerdown', unlockAudio, { once: true, capture: true });
+    return () => window.removeEventListener('pointerdown', unlockAudio, true);
+  }, []);
 
   // Fetch round history + initial balance
   useEffect(() => {
@@ -70,9 +90,12 @@ export default function CrashGame() {
           {connected && (
             <span className="crash-conn-badge crash-conn-badge--on">Live</span>
           )}
+          <button className="crash-deposit-btn" onClick={() => setDepositOpen(true)}>+ Deposit</button>
           <button className="crash-logout-btn" onClick={logout}>Sign out</button>
         </div>
       </header>
+
+      {depositOpen && <DepositModal onClose={() => setDepositOpen(false)} />}
 
       {/* ── Round history strip ──────────────────────────────── */}
       <RoundHistory rounds={history} />
@@ -106,14 +129,14 @@ export default function CrashGame() {
       </div>
 
       {/* ── Provably fair link ───────────────────────────────── */}
-      {gameState?.status === 'crashed' && gameState?.serverSeed && (
+      {/* {gameState?.status === 'crashed' && gameState?.serverSeed && (
         <div className="crash-fair-bar">
           <span>Round #{gameState.id} — seed hash: </span>
           <code className="crash-seed-hash">{gameState.serverSeedHash?.slice(0, 16)}…</code>
           <span> revealed: </span>
           <code className="crash-seed-hash">{gameState.serverSeed?.slice(0, 16)}…</code>
         </div>
-      )}
+      )} */}
     </div>
   );
 }

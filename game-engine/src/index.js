@@ -6,6 +6,7 @@ const helmet  = require('helmet');
 const cors    = require('cors');
 const morgan  = require('morgan');
 const { Server } = require('socket.io');
+const msgpackParser = require('socket.io-msgpack-parser');
 
 const { pool }        = require('./config/db');
 const { initRedis }   = require('./config/redis');
@@ -56,12 +57,18 @@ app.use((err, _req, res, _next) => {
 const server = http.createServer(app);
 
 const io = new Server(server, {
+  parser: msgpackParser,
   cors: {
     origin: true,                                     // reflect any Origin — allows all origins
     methods: ['GET', 'POST'],
   },
   // Allow connections through Nginx WebSocket proxy
   transports: ['websocket', 'polling'],
+  // Compress messages larger than 256 bytes (skips tiny game:tick frames)
+  perMessageDeflate: {
+    threshold: 256,
+    zlibDeflateOptions: { level: 6 },  // 1=fastest, 9=best compression
+  },
 });
 
 // ── Boot sequence ─────────────────────────────────────────────────────────────
